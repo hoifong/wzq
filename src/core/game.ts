@@ -22,7 +22,7 @@ export enum PlayerSide {
     WHITE, BLACK, VIEWER
 }
 
-interface GameConfig {
+export interface GameConfig {
     boardSize?: number
     firstMove?: PlayerSide
     maxTimeout?: number     //毫秒

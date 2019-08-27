@@ -1,7 +1,7 @@
 /// <reference types="node"/>
 import { v1 as uuidV1 } from 'uuid';
 import { EventEmitter } from 'events';
-import Game from './game';
+import Game, { GameConfig } from './game';
 import { Point } from './types';
 
 interface PlayerInfo {
@@ -136,8 +136,8 @@ class Player extends EventEmitter {
     }
 
     // 创建游戏
-    createGame() {
-        const game = new Game();
+    createGame(config?: GameConfig) {
+        const game = new Game(config);
         this.join(game);
         return game;
     }

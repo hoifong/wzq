@@ -1,6 +1,6 @@
 /// <reference types="node"/>
 
-import Game, { PlayerSide } from './core/game';
+import Game from './core/game';
 import Player from './core/player';
 import { createInterface } from 'readline';
 
