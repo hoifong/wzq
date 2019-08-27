@@ -46,25 +46,10 @@ class Game extends EventEmitter {
     //  白方
     private _whiteSide: Player | null = null
 
-    get blackSide() {
-        return this._blackSide;
-    }
-    set blackSide(player: Player | null) {
-        if (!player) {
-            this.host = this._whiteSide;
-            this.roomState = RoomState.INIT;
-        } else if(!this._whiteSide) {
-            this.host = player;
-        }
-        this._blackSide = player;
-    }
-
-    //  黑方
-    private _blackSide: Player | null = null
-
     get whiteSide() {
         return this._whiteSide;
     }
+    
     set whiteSide(player: Player | null) {
         if (!player) {
             this.host = this._blackSide;
@@ -73,6 +58,23 @@ class Game extends EventEmitter {
             this.host = player;
         }
         this._whiteSide = player;
+    }
+
+    //  黑方
+    private _blackSide: Player | null = null
+
+    get blackSide() {
+        return this._blackSide;
+    }
+
+    set blackSide(player: Player | null) {
+        if (!player) {
+            this.host = this._whiteSide;
+            this.roomState = RoomState.INIT;
+        } else if(!this._whiteSide) {
+            this.host = player;
+        }
+        this._blackSide = player;
     }
 
     //  赢方
@@ -334,7 +336,7 @@ class Game extends EventEmitter {
         this.config = {
             boardSize: 20,
             firstMove: PlayerSide.BLACK,
-            maxTimeout: 10000,
+            maxTimeout: 30000,
             ...config
         };
         this.on(Game.EVENTS.WAIT, this.onGameWait);

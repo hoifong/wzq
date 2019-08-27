@@ -4,7 +4,7 @@ import { EventEmitter } from 'events';
 import Game, { GameConfig } from './game';
 import { Point } from './types';
 
-interface PlayerInfo {
+export interface PlayerInfo {
     //  id
     id?: string
     //  用户名
@@ -15,7 +15,6 @@ interface PlayerInfo {
     level?: number
     //  头像
     pic?: string
-
 }
 
 const defaultInfo: PlayerInfo = {
@@ -26,9 +25,9 @@ const defaultInfo: PlayerInfo = {
 
 class Player extends EventEmitter {
     //  个人信息
-    private info: PlayerInfo
+    protected info: PlayerInfo
     //  所在的game
-    private game: Game | null
+    protected game: Game | null
 
     /**
      * 实例化Player对象，如果info中不包含ID或createTime则自动创建
@@ -48,7 +47,7 @@ class Player extends EventEmitter {
     }
 
     // 生成id
-    private createID() {
+    protected createID() {
         return '' + parseInt(uuidV1().slice(0, 8), 16)%100000;
     }
 
@@ -165,19 +164,23 @@ class Player extends EventEmitter {
         QUIT: 'quit'
     }
 
-    onGameWait() {
+    onGameWait = () => {
+        // console.log('\nplayer can do st after game wait...');
         //  todo...
     }
-    onGameStart() {
+    onGameStart = () => {
+        // console.log('\nplayer can do st after game started...');
         //  todo...
     }
-    onGameMoved() {
+    onGameMoved = () => {
+        // console.log('\nplayer can do st after player moved...');
         //  todo...
     }
-    onGamePause() {
+    onGamePause = () => {
         //  todo...
     }
-    onGameOver() {
+    onGameOver = () => {
+        // console.log('\nplayer can do st after game overed...');
         //  todo...
     }
 }

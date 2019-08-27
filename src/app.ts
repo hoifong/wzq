@@ -2,6 +2,7 @@
 
 import Game from './core/game';
 import Player from './core/player';
+import Robot from './core/robot';
 import { createInterface } from 'readline';
 
 let game: Game = null;
@@ -21,11 +22,11 @@ const question = msg => new Promise(resolve => {
 
 question('请输入玩家1名字：\n')
     .then((answer: string) => {
-        player1 = new Player({
+        player1 = new Robot({
             name: answer
         });
     
-        console.log(`玩家1已创建，玩家信息如下：\n`);
+        console.log(`机器人已创建，玩家信息如下：\n`);
         console.log(player1.toString());
 
         return question('请输入玩家2名字：\n');
@@ -42,17 +43,18 @@ question('请输入玩家1名字：\n')
     });
 
 function main() {
-    game = player1.createGame();
+    game = player1.createGame({
+        maxTimeout: 15 * 1000
+    });
     player2.join(game);
 
-    player2.ready();
-    player1.ready();
-
     game.on('move', game.logBoard);
-
     game.on('over', () => {
         r1.close();
     });
+
+    player2.ready();
+    player1.ready();
 
     getMove();
 }
