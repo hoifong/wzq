@@ -1,0 +1,1 @@
+{"version":3,"sources":["views/PageReg/index.tsx"],"names":[],"mappings":"iHAAA,2BAEe,qBACX,OAAO","file":"static/js/6.71278a53.chunk.js","sourcesContent":["import React from 'react';\r\n\r\nexport default () => {\r\n    return <h1>注册页面</h1>;\r\n};"],"sourceRoot":""}

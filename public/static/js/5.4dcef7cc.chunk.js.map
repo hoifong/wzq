@@ -1,0 +1,1 @@
+{"version":3,"sources":["views/PageHall/index.tsx"],"names":[],"mappings":"iHAAA,2BAEe,qBACX,OAAO","file":"static/js/5.4dcef7cc.chunk.js","sourcesContent":["import React from 'react';\r\n\r\nexport default () => {\r\n    return <h1>大厅页</h1>;\r\n};"],"sourceRoot":""}

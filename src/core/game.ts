@@ -1,47 +1,36 @@
 /// <reference types="node"/>
 import { EventEmitter } from 'events';
+import { v1 as uuidV1 } from 'uuid';
 import Player from './player';
-import { Point } from './types';
+import  { RoomState, Point, GameConfig, PlayerSide, CellState } from './types';
 import { judgeWinner } from './calculator';
 
-//  棋格状态
-enum CellState {
-    INIT, BLACK, WHITE
-}
 
-//  房间状态
-enum RoomState {
-    INIT,       //房间初始化至双方玩家中一玩家准备前
-    WAITING,    //双方玩家其中一方准备至开始游戏
-    GAMING,     //开始游戏至暂停
-    PAUSE,      //游戏过程中暂停
-    OVER        //游戏结束
-}
 
-export enum PlayerSide {
-    WHITE, BLACK, VIEWER
-}
-
-export interface GameConfig {
-    boardSize?: number
-    firstMove?: PlayerSide
-    maxTimeout?: number     //毫秒
-}
-
-class Game extends EventEmitter {
-    
+export class Game extends EventEmitter {
     //  房主
     host: Player | null = null
     //  房间状态
     roomState: RoomState = RoomState.INIT
     //  观众
     viewers: Array<Player> = []
-    //  白方落子
+    //  白方落子记录
     whiteSteps: Array<Point> = []
-    //  黑方落子
+    //  黑方落子记录
     blackSteps: Array<Point> = []
     //  设置
     config: GameConfig
+    //  对局开始时间
+    startTime: Date
+    //  对局结束时间
+    endTime: Date
+    
+    // 房间id
+    private roomId: String  //5位
+
+    get id() {
+        return this.roomId;
+    }
 
     //  白方
     private _whiteSide: Player | null = null
@@ -86,7 +75,41 @@ class Game extends EventEmitter {
     set winner(player) {
         this._winner = player;
         this.roomState = RoomState.OVER;
-        this.emit(Game.EVENTS.OVER, this);
+        this.endTime = new Date();
+
+        process.nextTick(() => {
+            //  保证在触发move之后再触发over
+            //  但是需要马上清除掉倒计时timer
+            this.clearTimer();
+            this.emit(Game.EVENTS.OVER, this);
+        });
+    }
+
+    //  棋盘
+    private _board: Array<Array<CellState>> = [];
+
+    get board() {
+        return this._board;
+    }
+
+    private initBoard() {
+        const board:Array<Array<CellState>> = [];
+        const size = this.config.boardSize;
+
+        //  初始化棋盘
+        for (let x=0;x<size;x++) {
+            board.push([]);
+            const row = board[x];
+            for (let y=0;y<size;y++) {
+                row.push(CellState.INIT);
+            }
+        }
+
+        this._board = board;
+    }
+
+    private setCellSate(move: Point, state: CellState) {
+        this._board[move.x][move.y] = state;
     }
 
     /**
@@ -98,6 +121,9 @@ class Game extends EventEmitter {
     private timer: NodeJS.Timeout = null
 
     get countDown() {
+        if (!this.ifGaming) {
+            return 0;
+        }
         const now = new Date().getTime();
         return this.lastMoveTime + this.config.maxTimeout - now;
     }
@@ -150,34 +176,6 @@ class Game extends EventEmitter {
     get ifBlackFirst() {
         return this.config.firstMove === PlayerSide.BLACK;
     }
-    //  棋盘
-    get board() {
-        const board:Array<Array<CellState>> = [];
-        const size = this.config.boardSize;
-
-        //  初始化棋盘
-        for (let x=0;x<size;x++) {
-            board.push([]);
-            const row = board[x];
-            for (let y=0;y<size;y++) {
-                row.push(CellState.INIT);
-            }
-        }
-        const whiteSteps = this.whiteSteps;
-        const blackSteps = this.blackSteps;
-
-        //  设置已落子状态
-        for (let i=0;i<whiteSteps.length;i++) {
-            let {x, y} = whiteSteps[i];
-            board[x][y] = CellState.WHITE;
-        }
-
-        for (let i=0;i<blackSteps.length;i++) {
-            let {x, y} = blackSteps[i];
-            board[x][y] = CellState.BLACK;
-        }
-        return board;
-    }
 
     //  是否正在游戏中
     get ifGaming() {
@@ -186,6 +184,16 @@ class Game extends EventEmitter {
 
     get ifOnGame() {
         return this.ifGaming || this.roomState === RoomState.PAUSE;
+    }
+
+    //  对局时长
+    get duration() {
+        if (this.ifGaming) {
+            return Math.floor(new Date().getTime()/1000 - this.startTime.getTime()/1000);
+        } else if(this.roomState === RoomState.OVER) {
+            return Math.floor(this.endTime.getTime()/1000 - this.startTime.getTime()/1000);
+        }
+        return 0;
     }
 
     /**
@@ -231,6 +239,8 @@ class Game extends EventEmitter {
 
             //  游戏开始
             this.startCountDown();
+            this.startTime = new Date();
+            this.initBoard();
             this.emit(Game.EVENTS.START, this);
             return;
         }
@@ -249,16 +259,18 @@ class Game extends EventEmitter {
         }
         if (this.ifGaming && player.equal(this.activePlayer)) {
             const steps = this.ifBlackActive ? this.blackSteps :  this.whiteSteps;
+
+            this.setCellSate(moveTo, this.ifBlackActive ? CellState.BLACK : CellState.WHITE);
             steps.push(moveTo);
 
-            //  倒计时
-            this.startCountDown();
-            this.emit('move');
-
             //  判断赢方
-            if (judgeWinner(steps)) {
+            if (judgeWinner(this._board, moveTo)) {
                 this.winner = player;
+            } else {
+                this.startCountDown();
             }
+
+            this.emit(Game.EVENTS.MOVE, this);
         }
     }
 
@@ -312,7 +324,6 @@ class Game extends EventEmitter {
         this.on(Game.EVENTS.WAIT, player.onGameWait);
         this.on(Game.EVENTS.START, player.onGameStart);
         this.on(Game.EVENTS.MOVE, player.onGameMoved);
-        this.on(Game.EVENTS.PAUSE, player.onGamePause);
         this.on(Game.EVENTS.OVER, player.onGameOver);
     }
 
@@ -321,7 +332,6 @@ class Game extends EventEmitter {
         this.off(Game.EVENTS.WAIT, player.onGameWait);
         this.off(Game.EVENTS.START, player.onGameStart);
         this.off(Game.EVENTS.MOVE, player.onGameMoved);
-        this.off(Game.EVENTS.PAUSE, player.onGamePause);
         this.off(Game.EVENTS.OVER, player.onGameOver);
     }
 
@@ -331,27 +341,42 @@ class Game extends EventEmitter {
      * ***************************************
      */
 
+    /**
+     *  defaultConfig = {
+     *      boardSize: 20,
+     *      firstMove: PlayerSide.BLACK,
+     *      maxTimeout: 30000,
+     *  }
+     */
     constructor(config: GameConfig = {}) {
         super();
         this.config = {
-            boardSize: 20,
-            firstMove: PlayerSide.BLACK,
-            maxTimeout: 30000,
+            ...Game.defaultConfig,
             ...config
         };
+        this.roomId = this.createId();
         this.on(Game.EVENTS.WAIT, this.onGameWait);
         this.on(Game.EVENTS.START, this.onGameStart);
         this.on(Game.EVENTS.MOVE, this.onGameMove);
-        this.on(Game.EVENTS.PAUSE, this.onGamePause);
         this.on(Game.EVENTS.OVER, this.onGameOver);
+    }
+
+    private createId() {
+        return ('' + parseInt(uuidV1().slice(0, 8), 16)).slice(0, 5);
+    }
+
+    static defaultConfig = {
+        boardSize: 20,
+        firstMove: PlayerSide.BLACK,
+        maxTimeout: 30000,
     }
 
     static EVENTS = {
         WAIT: 'wait',
         START: 'start',
         MOVE: 'move',
-        PAUSE: 'pause',
-        CONTINUE: 'continue',
+        // PAUSE: 'pause',
+        // CONTINUE: 'continue',
         OVER: 'over'
     }
 
@@ -370,15 +395,17 @@ class Game extends EventEmitter {
         const lastMove = this.ifBlackActive ? this.whiteSteps[this.whiteSteps.length - 1] : this.blackSteps[this.blackSteps.length - 1];
         const activePlayer = this.ifBlackActive ? this._blackSide : this._whiteSide;
         console.log(`The player ${lastMovePlayer.name} has moved to (${lastMove.x},${lastMove.y}), now player ${activePlayer.name} move;\n`);
+
+        this.logBoard();
     }
     onGamePause() {
 
     }
     onGameOver() {
         const lastActiveSide = this.ifBlackActive ? 'white' : 'black';
+        const duration = this.duration;
         const winner = this.winner;
-        console.log(`Congratulations! The ${lastActiveSide} player ${winner.name} win the game!`);
-        this.clearTimer();
+        console.log(`Congratulations! The ${lastActiveSide} player ${winner.name} win the game!\ngame duration: ${duration} s`);
     }
 
     /**

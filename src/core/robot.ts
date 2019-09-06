@@ -1,13 +1,13 @@
-import Player, { PlayerInfo } from './player';
-import { Point } from './types';
+import Player from './player';
+import { Point, PlayerInfo } from './types';
 import { randomMove } from './calculator/robot';
 
 export enum AUTO_LEVEL {
     RANDOM, LEVEL1
 }
 
-class Robot extends Player {
-    constructor(info: PlayerInfo) {
+export class Robot extends Player {
+    constructor(info?: PlayerInfo) {
         super(info);
     }
 
@@ -42,10 +42,10 @@ class Robot extends Player {
         //  todo...
     }
     onGameOver = () => {
-        console.log('\nplayer can do st after game overed...');
         //  todo...
     }
 
+    //  计算下一步落子
     static calculateNextMove(
         blackSteps: ReadonlyArray<Point>,
         whiteSteps: ReadonlyArray<Point>,

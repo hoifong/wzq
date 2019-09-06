@@ -1,0 +1,1 @@
+{"version":3,"sources":["views/PageRoom/index.tsx"],"names":[],"mappings":"iHAAA,2BAEe,qBACX,OAAO","file":"static/js/7.d7f5a61e.chunk.js","sourcesContent":["import React from 'react';\r\n\r\nexport default () => {\r\n    return <h1>房间页</h1>;\r\n};"],"sourceRoot":""}

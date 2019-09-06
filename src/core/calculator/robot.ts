@@ -6,7 +6,7 @@ export const randomMove = (
     size: number
 ) => {
     const restBlanks = size*size - blackSteps.length - whiteSteps.length;
-    let random = Math.floor(Math.random()*restBlanks);
+    let random = Math.floor(Math.random()*restBlanks) + 1;
     let i,j;
     for ( i = 0; i < size; i++) {
         for ( j = 0; j < size; j++) {

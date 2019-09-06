@@ -1,0 +1,2 @@
+(window["webpackJsonpwzq-front"]=window["webpackJsonpwzq-front"]||[]).push([[7],{70:function(n,t,e){"use strict";e.r(t);var o=e(0),r=e.n(o);t.default=function(){return r.a.createElement("h1",null,"\u623f\u95f4\u9875")}}}]);
+//# sourceMappingURL=7.d7f5a61e.chunk.js.map

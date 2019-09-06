@@ -1,21 +1,8 @@
-/// <reference types="node"/>
+/// <reference types="node" path='index.js'/>
 import { v1 as uuidV1 } from 'uuid';
 import { EventEmitter } from 'events';
-import Game, { GameConfig } from './game';
-import { Point } from './types';
-
-export interface PlayerInfo {
-    //  id
-    id?: string
-    //  用户名
-    name?: string
-    //  创建时间
-    createTime?: Date
-    //  等级
-    level?: number
-    //  头像
-    pic?: string
-}
+import Game from './game';
+import { Point, GameConfig, PlayerInfo } from './types';
 
 const defaultInfo: PlayerInfo = {
     name: 'Player',
@@ -23,9 +10,9 @@ const defaultInfo: PlayerInfo = {
     pic: ''
 }
 
-class Player extends EventEmitter {
+export class Player extends EventEmitter {
     //  个人信息
-    protected info: PlayerInfo
+    info: PlayerInfo
     //  所在的game
     protected game: Game | null
 
@@ -33,22 +20,23 @@ class Player extends EventEmitter {
      * 实例化Player对象，如果info中不包含ID或createTime则自动创建
      * @param info 
      */
-    constructor(info: PlayerInfo) {
+    constructor(info: PlayerInfo = {}) {
         super();
-        const id = info.id || this.createID();
-        const createTime = info.createTime || new Date();
 
-        const reWrites:PlayerInfo = {
-            id,
-            createTime
-        }
+        this.info = {
+            ...defaultInfo,
+            id: this.createID(),
+            createTime: new Date(),
+            ...info
+        };
 
-        this.info = Object.assign({}, defaultInfo, info, reWrites);
     }
+
+    static defaultInfo = defaultInfo
 
     // 生成id
     protected createID() {
-        return '' + parseInt(uuidV1().slice(0, 8), 16)%100000;
+        return ('' + parseInt(uuidV1().slice(0, 8), 16)).slice(0, 8);
     }
 
     /**
@@ -63,6 +51,9 @@ class Player extends EventEmitter {
     get id() {
         return this.info.id;
     }
+    get level() {
+        return this.info.level;
+    }
 
     /**
      * ***************************************
@@ -72,49 +63,49 @@ class Player extends EventEmitter {
 
     //  打印信息
     printInfo() {
-        console.log(this.toString());
+        const info = this.info;
+        let output = `Player: [${info.name}]\n`
+            +   `id: [${info.id}]\n`
+            +   `level: [${info.level}]\n`
+            +   `createTime: [${info.createTime.toLocaleString()}]`;
+        console.log(output);
     }
 
     // 转化为string
     toString() {
-        const info = this.info;
-        return `Player: [${info.name}]\n`
-            +   `id: [${info.id}]\n`
-            +   `level: [${info.level}]\n`
-            +   `createTime: [${info.createTime.toLocaleString()}]`;
+        return JSON.stringify(this);
     }
 
     // stringify
     toJSON() {
-        return JSON.stringify({
+        return {
             ...this.info,
             createTime: this.info.createTime.getTime()
-        });
+        };
     }
 
     // 从json字符串实例化一个player对象
-    fromJSON(jsonStr: string) {
-        const json = JSON.parse(jsonStr);
+    static fromString(s: string) {
+        const json = JSON.parse(s);
 
         return new Player({
             ...json,
             createTime: new Date(json.createTime)
         });
     }
-
     
     // 加入游戏
     join(game: Game) {
         if (this.game) {
-            throw new Error('can not join both two games');
+            return false;
         }
         if (!game.join(this)) {
-            throw new Error('can not join this game');
+            return false;
         }
         this.game = game;
+        this.onJoinGame();
         return true;
     }
-
     
     // 落子
     move(to: Point) {
@@ -162,6 +153,10 @@ class Player extends EventEmitter {
     static EVENTS = {
         READY: 'ready',
         QUIT: 'quit'
+    }
+
+    onJoinGame = () => {
+        //  todo...
     }
 
     onGameWait = () => {
