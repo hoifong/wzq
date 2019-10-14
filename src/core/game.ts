@@ -28,6 +28,18 @@ export class Game extends EventEmitter {
     // 房间id
     private roomId: String  //5位
 
+    toJSON() {
+        return {
+            id: this.roomId,
+            host: this.host.id,
+            roomState: this.roomState,
+            whiteSide: this._whiteSide && this._whiteSide.id || '',
+            blackSide: this._blackSide && this._blackSide.id || '',
+            startTime: this.startTime && this.startTime.getTime() || '',
+            config: this.config
+        };
+    }
+
     get id() {
         return this.roomId;
     }

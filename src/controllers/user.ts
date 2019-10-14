@@ -4,6 +4,8 @@ import { success, failed } from './helper';
 import passport from 'passport';
 import { IVerifyOptions } from 'passport-local';
 import { NextFunction } from 'connect';
+import hall from '../server';
+import { Player } from '../core';
 
 /**
  * 新建用户
@@ -74,9 +76,28 @@ export const login = (req: Request, res: Response, next: NextFunction) => {
             if (err) {
                 return next(err);
             }
+
+            //  进入大厅
+            hall.addPlayer(new Player({
+                id: user.username,
+                name: user.username,
+                level: user.level
+            }));
+
             return res.json(success(user));
         });
     })(req, res, next);
+}
+
+/**
+ * 创建房间
+ */
+export const createRoom = (req: Request, res: Response) => {
+    const user: any = req.user;
+
+    hall.addGame(hall.findPlayer(user.username).createGame());
+
+    res.json(success());
 }
 
 /**

@@ -23,17 +23,17 @@ export interface GameConfig {
 }
 
 export enum PlayerSide {
-    WHITE, BLACK, VIEWER
+    WHITE = 0, BLACK, VIEWER
 }
 
 //  棋格状态
 export enum CellState {
-    INIT, BLACK, WHITE
+    INIT = 0, BLACK, WHITE
 }
 
 //  房间状态
 export enum RoomState {
-    INIT,       //房间初始化至双方玩家中一玩家准备前
+    INIT = 0,       //房间初始化至双方玩家中一玩家准备前
     WAITING,    //双方玩家其中一方准备至开始游戏
     GAMING,     //开始游戏至暂停
     PAUSE,      //游戏过程中暂停
