@@ -8,7 +8,6 @@ import io from 'socket.io';
 
 import { uri } from './config/db';
 import { SESSION_SECRET } from './config/server';
-import * as UserController from './controllers/user';
 import * as HallController from './controllers/hall';
 import { logger } from './middlewares';
 
@@ -41,8 +40,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 import './config/passport';
-import * as passportConfig from './config/passport';
-import { success } from './controllers/helper';
+import apiRouter from './router';
 
 app.use(logger);
 
@@ -50,32 +48,7 @@ app.use(
     express.static(path.join(__dirname, '../public'), {maxAge: 31557600000})
 );
 
-//  跨域
-app.all('/api/*', (_req: Request, res: Response, next: NextFunction) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Headers', 'Content-Type');
-    res.header('Access-Control-Allow-Methods', '*');
-    res.header('Content-Type', 'application/json;charset=utf-8');
-    next();
-});
-
-app.post('/api/register', UserController.addUser);
-
-app.get('/api/userexist/:name', UserController.getUsernameExist);
-
-app.post('/api/login', UserController.login);
-
-app.post('/api/logout', UserController.logout);
-
-app.post('/api/createRoom', passportConfig.isAuthenticated, UserController.createRoom);
-
-app.get('/api/rooms', passportConfig.isAuthenticated, HallController.getRooms);
-
-app.get('/api/players', passportConfig.isAuthenticated, HallController.getPlayers);
-
-app.get('/api/hhh', passportConfig.isAuthenticated, (_, res: Response) => {
-    res.json(success('1'));
-});
+app.use('/api', apiRouter);
 
 app.get('/*', (req, res) => {
     res.header('Content-Type', 'text/html');
