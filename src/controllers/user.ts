@@ -6,6 +6,8 @@ import { IVerifyOptions } from 'passport-local';
 import { NextFunction } from 'connect';
 import hall from '../server';
 import { Player } from '../core';
+import { Socket } from 'socket.io';
+import Record from '../models/record';
 
 /**
  * 新建用户
@@ -44,13 +46,17 @@ export const addUser = (req: Request, res: Response) => {
  */
 export const getUsernameExist = (req: Request, res: Response) => {
     const username = req.params.name;
+    if (!username) {
+        return res.json(failed('用户名不能为空'));
+    }
 
     User.exists({username}).then((exist: boolean) => {
         res.status(200);
         if (!exist) {
-            res.json(success());
+            //  不存在
+            res.json(success(0));
         } else {
-            res.json(failed('用户名已存在'));
+            res.json(success(1));
         }
     }).catch((err) => {
         res.json(failed(err.message || err));
@@ -84,7 +90,7 @@ export const login = (req: Request, res: Response, next: NextFunction) => {
                 level: user.level
             }));
 
-            return res.json(success(user));
+            return res.json(success());
         });
     })(req, res, next);
 }
@@ -95,9 +101,36 @@ export const login = (req: Request, res: Response, next: NextFunction) => {
 export const createRoom = (req: Request, res: Response) => {
     const user: any = req.user;
 
-    hall.addGame(hall.findPlayer(user.username).createGame());
+    const game = hall.findPlayer(user.username).createGame();
+    if (game) {
+        hall.addGame(game);
+        res.json(success());
+    } else {
+        res.json(failed('房间创建失败'));
+    }
+}
 
-    res.json(success());
+/**
+ * 获取用户信息
+ */
+export const getUser = (req: Request, res: Response) => {
+    const user: any = req.user;
+    const myRecordsQuery = Record.find();
+
+    myRecordsQuery.or([{whiteSide: user.username}, {blackSide: user.username}]);
+
+    myRecordsQuery.exec((err, result) => {
+        if (err) {
+            res.json(failed('查询失败'));
+        } else {
+            res.json(success({
+                username: user.username,
+                createTime: user.createTime,
+                level: user.level,
+                records: result
+            }));
+        }
+    })
 }
 
 /**

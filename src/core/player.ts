@@ -128,8 +128,10 @@ export class Player extends EventEmitter {
     // 创建游戏
     createGame(config?: GameConfig) {
         const game = new Game(config);
-        this.join(game);
-        return game;
+        if (this.join(game)) {
+            return game;
+        }
+        return null;
     }
 
     // 比较两个player是否相同

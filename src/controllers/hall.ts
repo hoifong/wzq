@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import hall from "../server";
 import { success } from "./helper";
-import { Socket } from "socket.io";
+import { Socket, Server } from "socket.io";
 
 export function getRooms(req: Request, res: Response) {
     const rooms: Array<any> = hall.games;
@@ -27,12 +27,13 @@ export function getPlayers(req: Request, res: Response) {
     }));
 }
 
-export function server(socket: Socket) {
-    socket.emit('update', hall.state);
-
-    const removeListener = hall.onUpdate(() => {
+export function initHallServer(server: Server) {
+    server.of('/ws/hall').on('connection', socket => {
         socket.emit('update', hall.state);
-    });
 
-    socket.on('disconnect', removeListener);
+        socket.on('disconnect', hall.onUpdate(() => {
+            socket.emit('update', hall.state);
+        }));
+         
+    });
 }

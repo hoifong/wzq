@@ -14,5 +14,17 @@ export interface IRecord extends mongoose.Document {
 }
 
 export const RecordSchema = new mongoose.Schema({
-    
+    id: { type: String, required: true, unique: true },
+    date: { type: Date, required: true },
+    duration: { type: Number, required: true, min: 0 },
+    blackSide: { type: String, required: true },
+    whiteSide: { type: String, required: true },
+    whiteSteps: { type: Array },
+    blackSteps: { type: Array },
+    config: { type: Object },
+    winner: { type: Number }
 })
+
+const Record = mongoose.model<IRecord>("Record", RecordSchema);
+
+export default Record;

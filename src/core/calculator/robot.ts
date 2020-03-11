@@ -1,5 +1,6 @@
 import { Point } from '../types';
 
+//  随机落子
 export const randomMove = (
     blackSteps: ReadonlyArray<Point>,
     whiteSteps: ReadonlyArray<Point>,

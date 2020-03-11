@@ -35,6 +35,8 @@ export class Game extends EventEmitter {
             roomState: this.roomState,
             whiteSide: this._whiteSide && this._whiteSide.id || '',
             blackSide: this._blackSide && this._blackSide.id || '',
+            whiteSteps: this.whiteSteps,
+            blackSteps: this.blackSteps,
             startTime: this.startTime && this.startTime.getTime() || '',
             config: this.config
         };
@@ -430,11 +432,11 @@ export class Game extends EventEmitter {
         const logs = this.board.map(row => {
             return row.map(state => {
                 switch(state) {
-                    case CellState.BLACK: return '\x1b[37;41m  \x1b[37;40m';
-                    case CellState.WHITE: return '\x1b[37;47m  \x1b[37;40m';
-                    default: return '  ';
+                    case CellState.BLACK: return 'B';
+                    case CellState.WHITE: return 'W';
+                    default: return ' ';
                 }
-            }).join('');
+            }).join(' | ');
         }).join('\n');
         console.log(logs);
     }
