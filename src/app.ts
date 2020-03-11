@@ -6,7 +6,6 @@ import passport from 'passport';
 import path from 'path';
 import io from 'socket.io';
 
-import apiRouter from './router/api';
 import { initHallServer } from './controllers/hall';
 import { uri } from './config/db';
 import { SESSION_SECRET } from './config/server';
@@ -41,6 +40,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 import './config/passport';
+import apiRouter from './router';
 
 app.use(logger);
 
